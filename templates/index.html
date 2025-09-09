@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISP Technician Routing System - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1.1em;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .status.available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.busy {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.assigned {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status.in_progress {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .rating {
+            color: #f39c12;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .table {
+                font-size: 0.9em;
+            }
+            
+            .table th,
+            .table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 ISP Technician Routing System</h1>
+            <p>Smart routing for Filipino ISP field service management</p>
+        </div>
+        
+        <div class="dashboard" id="dashboard">
+            <div class="loading">Loading dashboard data...</div>
+        </div>
+        
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('technicians')">👷 Technicians</button>
+                <button class="tab" onclick="showTab('customers')">👤 Customers</button>
+                <button class="tab" onclick="showTab('jobs')">📋 Jobs</button>
+            </div>
+            
+            <div id="technicians" class="tab-content active">
+                <h2>Available Technicians</h2>
+                <div id="technicians-table" class="loading">Loading technicians...</div>
+            </div>
+            
+            <div id="customers" class="tab-content">
+                <h2>Customer Database</h2>
+                <div id="customers-table" class="loading">Loading customers...</div>
+            </div>
+            
+            <div id="jobs" class="tab-content">
+                <h2>Job Management</h2>
+                <div id="jobs-table" class="loading">Loading jobs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+                
+                const dashboardHtml = `
+                    <div class="card">
+                        <h3>👷 Technicians</h3>
+                        <div class="stat">
+                            <span>Total</span>
+                            <span class="stat-value">${data.technicians.total}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Available</span>
+                            <span class="stat-value">${data.technicians.available}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Busy</span>
+                            <span class="stat-value">${data.technicians.busy}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>📋 Jobs</h3>
+                        <div class="stat">
+                            <span>Total</span>
+                            <span class="stat-value">${data.jobs.total}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Pending</span>
+                            <span class="stat-value">${data.jobs.pending}</span>
+                        </div>
+                        <div class="stat">
+                            <span>In Progress</span>
+                            <span class="stat-value">${data.jobs.in_progress}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Completed</span>
+                            <span class="stat-value">${data.jobs.completed}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>📊 Performance</h3>
+                        <div class="stat">
+                            <span>Avg Response Time</span>
+                            <span class="stat-value">${data.performance.avg_response_time}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Completion Rate</span>
+                            <span class="stat-value">${data.performance.completion_rate}</span>
+                        </div>
+                        <div class="stat">
+                            <span>Customer Satisfaction</span>
+                            <span class="stat-value">${data.performance.customer_satisfaction}</span>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dashboard').innerHTML = dashboardHtml;
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        // Load technicians
+        async function loadTechnicians() {
+            try {
+                const response = await fetch('/api/technicians');
+                const technicians = await response.json();
+                
+                let tableHtml = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Skills</th>
+                                <th>Status</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                technicians.forEach(tech => {
+                    tableHtml += `
+                        <tr>
+                            <td><strong>${tech.name}</strong></td>
+                            <td>${tech.phone}</td>
+                            <td>${tech.address}</td>
+                            <td>${tech.skills.join(', ')}</td>
+                            <td><span class="status ${tech.status}">${tech.status}</span></td>
+                            <td><span class="rating">⭐ ${tech.rating}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += '</tbody></table>';
+                document.getElementById('technicians-table').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading technicians:', error);
+            }
+        }
+        
+        // Load customers
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/customers');
+                const customers = await response.json();
+                
+                let tableHtml = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Service Type</th>
+                                <th>Plan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                customers.forEach(customer => {
+                    tableHtml += `
+                        <tr>
+                            <td><strong>${customer.name}</strong></td>
+                            <td>${customer.phone}</td>
+                            <td>${customer.address}</td>
+                            <td>${customer.service_type}</td>
+                            <td>${customer.plan}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += '</tbody></table>';
+                document.getElementById('customers-table').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+        
+        // Load jobs
+        async function loadJobs() {
+            try {
+                const response = await fetch('/api/jobs');
+                const jobs = await response.json();
+                
+                let tableHtml = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Scheduled Time</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                jobs.forEach(job => {
+                    tableHtml += `
+                        <tr>
+                            <td>#${job.id}</td>
+                            <td>${job.type}</td>
+                            <td>${job.description}</td>
+                            <td><span class="status ${job.status}">${job.status}</span></td>
+                            <td><span class="status ${job.priority}">${job.priority}</span></td>
+                            <td>${new Date(job.scheduled_time).toLocaleString()}</td>
+                            <td>${job.estimated_duration} min</td>
+                            <td>
+                                ${job.status === 'pending' ? '<button class="btn btn-primary" onclick="assignJob(' + job.id + ')">Assign</button>' : ''}
+                                ${job.status === 'assigned' || job.status === 'in_progress' ? '<button class="btn btn-success" onclick="completeJob(' + job.id + ')">Complete</button>' : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += '</tbody></table>';
+                document.getElementById('jobs-table').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+            }
+        }
+        
+        // Assign job to available technician
+        async function assignJob(jobId) {
+            try {
+                // Find first available technician
+                const techResponse = await fetch('/api/technicians');
+                const technicians = await techResponse.json();
+                const availableTech = technicians.find(t => t.status === 'available');
+                
+                if (!availableTech) {
+                    alert('No available technicians at the moment.');
+                    return;
+                }
+                
+                const response = await fetch('/api/assign_job', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        job_id: jobId,
+                        technician_id: availableTech.id
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(`Job assigned to ${availableTech.name}!`);
+                    loadJobs();
+                    loadTechnicians();
+                    loadDashboard();
+                } else {
+                    alert('Failed to assign job: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error assigning job:', error);
+                alert('Error assigning job');
+            }
+        }
+        
+        // Complete job
+        async function completeJob(jobId) {
+            try {
+                const response = await fetch('/api/update_job_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        job_id: jobId,
+                        status: 'completed'
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Job completed successfully!');
+                    loadJobs();
+                    loadTechnicians();
+                    loadDashboard();
+                } else {
+                    alert('Failed to complete job: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error completing job:', error);
+                alert('Error completing job');
+            }
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            loadTechnicians();
+            loadCustomers();
+            loadJobs();
+        });
+    </script>
+</body>
+</html>
